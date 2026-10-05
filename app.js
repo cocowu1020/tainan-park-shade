@@ -9,8 +9,8 @@ const DATA = {
 const palettes = {
   heat_risk: ["#1a9850", "#91cf60", "#fee08b", "#fc8d59", "#d73027"],
   comb_pct: ["#f7fcf0", "#ccebc5", "#7bccc4", "#2b8cbe", "#084081"],
-  income: ["#ffffcc", "#c2e699", "#78c679", "#31a354", "#006837"],
-  population: ["#fff5eb", "#fdd0a2", "#fdae6b", "#e6550d", "#a63603"],
+  income: ["#f2f0f7", "#cbc9e2", "#9e9ac8", "#756bb1", "#54278f"],
+  population: ["#edf8fb", "#b2e2e2", "#66c2a4", "#2ca25f", "#006d2c"],
 };
 
 const state = {
