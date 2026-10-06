@@ -254,6 +254,8 @@ input:focus-visible {
   font-size: 11px;
 }
 
+.map-legend.hidden { display: none; }
+
 .legend-title {
   margin-bottom: 7px;
   font-size: 12px;

@@ -1,10 +1,10 @@
 const DATA = {
-  parks: "data/parks.geojson?v=20261006-6",
-  villages: "data/villages.geojson?v=20261006-6",
-  trees: "data/trees_ge2m.geojson?v=20261006-6",
-  buildings: "data/buildings.geojson?v=20261006-6",
-  shadow: (hour) => `data/shadows_${hour}.geojson?v=20261006-6`,
-  treeShadow: (hour) => `data/tree_shadows_${hour}.geojson?v=20261006-6`,
+  parks: "data/parks.geojson?v=20261006-7",
+  villages: "data/villages.geojson?v=20261006-7",
+  trees: "data/trees_ge2m.geojson?v=20261006-7",
+  buildings: "data/buildings.geojson?v=20261006-7",
+  shadow: (hour) => `data/shadows_${hour}.geojson?v=20261006-7`,
+  treeShadow: (hour) => `data/tree_shadows_${hour}.geojson?v=20261006-7`,
 };
 
 const palettes = {
@@ -158,6 +158,13 @@ function updateParkStyle() {
   if (!state.parksLayer) return;
   state.parksLayer.setStyle(parkStyle);
   renderLegend();
+}
+
+function toggleParks(show) {
+  if (!state.parksLayer) return;
+  if (show) state.parksLayer.addTo(map);
+  else map.removeLayer(state.parksLayer);
+  legendElement.classList.toggle("hidden", !show);
 }
 
 function renderLegend() {
@@ -408,6 +415,9 @@ document.getElementById("ranking-list").addEventListener("click", (event) => {
 
 const incomeToggle = document.getElementById("show-income");
 const populationToggle = document.getElementById("show-population");
+document.getElementById("show-parks").addEventListener("change", (event) => {
+  toggleParks(event.target.checked);
+});
 incomeToggle.addEventListener("change", () => {
   if (incomeToggle.checked) populationToggle.checked = false;
   updateVillageLayer(incomeToggle.checked ? "income" : "none").catch(handleError);

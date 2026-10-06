@@ -11,7 +11,7 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   >
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=20261006-7">
 </head>
 <body>
   <header class="app-header">
@@ -56,6 +56,10 @@
       <section class="control-section layer-options">
         <span class="section-label">Map layers</span>
         <label class="toggle-row">
+          <input id="show-parks" type="checkbox" checked>
+          <span>Parks / heat risk</span>
+        </label>
+        <label class="toggle-row">
           <input id="show-trees" type="checkbox">
           <span>Tree canopy ≥2 m</span>
         </label>
@@ -97,7 +101,7 @@
         <ol id="ranking-list" class="ranking-list"></ol>
       </section>
 
-      <a class="download-link" href="downloads/park_shadow_coverage.xlsx?v=20261006-6" download>Download park results</a>
+      <a class="download-link" href="downloads/park_shadow_coverage.xlsx?v=20261006-7" download>Download park results</a>
     </aside>
 
     <section class="map-region" aria-label="Interactive map">
@@ -112,6 +116,6 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
-  <script src="app.js?v=20261006-6"></script>
+  <script src="app.js?v=20261006-7"></script>
 </body>
 </html>
