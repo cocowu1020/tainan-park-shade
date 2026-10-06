@@ -34,10 +34,10 @@
       </section>
 
       <section class="control-section">
-        <span class="section-label">Park color</span>
-        <div class="segmented" role="group" aria-label="Park color metric">
-          <button type="button" class="metric-button active" data-metric="heat_risk">Heat risk</button>
-          <button type="button" class="metric-button" data-metric="comb_pct">Shade</button>
+        <span class="section-label">Heat-risk period</span>
+        <div class="segmented" role="group" aria-label="Heat-risk period">
+          <button type="button" class="metric-button active" data-metric="morning">Morning</button>
+          <button type="button" class="metric-button" data-metric="afternoon">Afternoon</button>
         </div>
       </section>
 
@@ -72,12 +72,13 @@
       <section class="control-section shadow-time">
         <label for="shadow-hour">Shadow time</label>
         <select id="shadow-hour">
+          <option value="0900">09:00</option>
           <option value="1000">10:00</option>
-          <option value="1100" selected>11:00</option>
+          <option value="1100">11:00</option>
           <option value="1200">12:00</option>
           <option value="1300">13:00</option>
           <option value="1400">14:00</option>
-          <option value="1500">15:00</option>
+          <option value="1500" selected>15:00</option>
           <option value="1600">16:00</option>
           <option value="1700">17:00</option>
           <option value="1800">18:00</option>
@@ -87,7 +88,7 @@
       <section class="ranking-section">
         <div class="ranking-heading">
           <h2>Highest heat risk</h2>
-          <span>11:00</span>
+          <span id="ranking-period">09:00–10:00</span>
         </div>
         <ol id="ranking-list" class="ranking-list"></ol>
       </section>

@@ -7,14 +7,14 @@ const DATA = {
 };
 
 const palettes = {
-  heat_risk: ["#1a9850", "#91cf60", "#fee08b", "#fc8d59", "#d73027"],
-  comb_pct: ["#f7fcf0", "#ccebc5", "#7bccc4", "#2b8cbe", "#084081"],
+  morning: ["#1a9850", "#91cf60", "#fee08b", "#fc8d59", "#d73027"],
+  afternoon: ["#1a9850", "#91cf60", "#fee08b", "#fc8d59", "#d73027"],
   income: ["#f2f0f7", "#cbc9e2", "#9e9ac8", "#756bb1", "#54278f"],
   population: ["#edf8fb", "#b2e2e2", "#66c2a4", "#2ca25f", "#006d2c"],
 };
 
 const state = {
-  metric: "heat_risk",
+  metric: "morning",
   parksData: null,
   parksLayer: null,
   villagesData: null,
@@ -111,13 +111,7 @@ function classColor(classValue, palette) {
 }
 
 function parkClass(properties) {
-  if (state.metric === "heat_risk") return Number(properties.risk_class);
-  const shade = Number(properties.comb_pct);
-  if (shade <= 20) return 1;
-  if (shade <= 40) return 2;
-  if (shade <= 60) return 3;
-  if (shade <= 80) return 4;
-  return 5;
+  return Number(state.metric === "morning" ? properties.morn_class : properties.aft_class);
 }
 
 function parkStyle(feature) {
@@ -135,11 +129,15 @@ function parkPopup(properties) {
   return `
     <div class="popup-title">${escapeHtml(properties.park_name)}</div>
     <div class="popup-grid">
-      <span>Heat risk</span><strong>${number(properties.heat_risk)}%</strong>
-      <span>Combined shade</span><strong>${number(properties.comb_pct)}%</strong>
+      <span>Morning heat risk</span><strong>${number(properties.morn_risk)}%</strong>
+      <span>Morning combined shade</span><strong>${number(properties.morn_shade)}%</strong>
+      <span>Morning rank</span><strong>${number(properties.morn_rank, 0)}</strong>
+      <span>Afternoon heat risk</span><strong>${number(properties.aft_risk)}%</strong>
+      <span>Afternoon combined shade</span><strong>${number(properties.aft_shade)}%</strong>
+      <span>Afternoon rank</span><strong>${number(properties.aft_rank, 0)}</strong>
       <span>Tree coverage</span><strong>${number(properties.tree_pct)}%</strong>
-      <span>Building shadow</span><strong>${number(properties.bldg_pct)}%</strong>
-      <span>Heat-risk rank</span><strong>${number(properties.heat_rank, 0)}</strong>
+      <span>Morning building shadow</span><strong>${number(properties.morn_bldg)}%</strong>
+      <span>Afternoon building shadow</span><strong>${number(properties.aft_bldg)}%</strong>
       <span>Village</span><strong>${escapeHtml(properties.district)} ${escapeHtml(properties.village)}</strong>
       <span>Median income</span><strong>${number(properties.med_inc_k, 0)} thousand NTD</strong>
       <span>Population age 0–12</span><strong>${number(properties.pop_0_12, 0)}</strong>
@@ -153,8 +151,9 @@ function updateParkStyle() {
 }
 
 function renderLegend() {
-  const isRisk = state.metric === "heat_risk";
-  const title = isRisk ? "Park heat risk (%)" : "Combined shade (%)";
+  const title = state.metric === "morning"
+    ? "Morning heat risk (%)"
+    : "Afternoon heat risk (%)";
   const labels = ["Lowest", "Low", "Middle", "High", "Highest"];
   const palette = palettes[state.metric];
   legendElement.innerHTML = `
@@ -179,15 +178,23 @@ function populateParkControls(features) {
   });
   parkSearch.append(fragment);
 
+  renderRanking(features);
+}
+
+function renderRanking(features = state.parksData?.features || []) {
+  const rankField = state.metric === "morning" ? "morn_rank" : "aft_rank";
+  const riskField = state.metric === "morning" ? "morn_risk" : "aft_risk";
+  document.getElementById("ranking-period").textContent =
+    state.metric === "morning" ? "09:00–10:00" : "14:00–16:00";
   const ranked = [...features]
-    .sort((a, b) => Number(a.properties.heat_rank) - Number(b.properties.heat_rank))
+    .sort((a, b) => Number(a.properties[rankField]) - Number(b.properties[rankField]))
     .slice(0, 15);
   document.getElementById("ranking-list").innerHTML = ranked.map((feature) => `
     <li>
       <button type="button" data-park-id="${feature.properties.park_id}">
-        <span class="rank-number">${feature.properties.heat_rank}</span>
+        <span class="rank-number">${feature.properties[rankField]}</span>
         <span class="rank-name">${escapeHtml(feature.properties.park_name)}</span>
-        <span class="rank-value">${number(feature.properties.heat_risk, 0)}</span>
+        <span class="rank-value">${number(feature.properties[riskField], 0)}</span>
       </button>
     </li>`).join("");
 }
@@ -339,6 +346,7 @@ document.querySelectorAll(".metric-button").forEach((button) => {
     button.classList.add("active");
     state.metric = button.dataset.metric;
     updateParkStyle();
+    renderRanking();
   });
 });
 
