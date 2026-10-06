@@ -1,9 +1,9 @@
 const DATA = {
-  parks: "data/parks.geojson",
-  villages: "data/villages.geojson",
-  trees: "data/trees_ge2m.geojson",
-  buildings: "data/buildings.geojson",
-  shadow: (hour) => `data/shadows_${hour}.geojson`,
+  parks: "data/parks.geojson?v=20261006-2",
+  villages: "data/villages.geojson?v=20261006-2",
+  trees: "data/trees_ge2m.geojson?v=20261006-2",
+  buildings: "data/buildings.geojson?v=20261006-2",
+  shadow: (hour) => `data/shadows_${hour}.geojson?v=20261006-2`,
 };
 
 const palettes = {
