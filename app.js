@@ -1,9 +1,10 @@
 const DATA = {
-  parks: "data/parks.geojson?v=20261006-3",
-  villages: "data/villages.geojson?v=20261006-3",
-  trees: "data/trees_ge2m.geojson?v=20261006-3",
-  buildings: "data/buildings.geojson?v=20261006-3",
-  shadow: (hour) => `data/shadows_${hour}.geojson?v=20261006-3`,
+  parks: "data/parks.geojson?v=20261006-4",
+  villages: "data/villages.geojson?v=20261006-4",
+  trees: "data/trees_ge2m.geojson?v=20261006-4",
+  buildings: "data/buildings.geojson?v=20261006-4",
+  shadow: (hour) => `data/shadows_${hour}.geojson?v=20261006-4`,
+  treeShadow: (hour) => `data/tree_shadows_${hour}.geojson?v=20261006-4`,
 };
 
 const palettes = {
@@ -23,6 +24,8 @@ const state = {
   buildingsLayer: null,
   shadowLayers: new Map(),
   currentShadowLayer: null,
+  treeShadowLayers: new Map(),
+  currentTreeShadowLayer: null,
   parkLayersById: new Map(),
 };
 
@@ -60,6 +63,8 @@ map.createPane("villages");
 map.getPane("villages").style.zIndex = 360;
 map.createPane("shadows");
 map.getPane("shadows").style.zIndex = 430;
+map.createPane("treeShadows");
+map.getPane("treeShadows").style.zIndex = 440;
 map.createPane("trees");
 map.getPane("trees").style.zIndex = 490;
 map.createPane("buildings");
@@ -335,6 +340,42 @@ async function updateShadowLayer() {
   state.currentShadowLayer.addTo(map);
 }
 
+async function updateTreeShadowLayer() {
+  if (state.currentTreeShadowLayer) {
+    map.removeLayer(state.currentTreeShadowLayer);
+    state.currentTreeShadowLayer = null;
+  }
+  if (!document.getElementById("show-tree-shadows").checked) return;
+  const hour = document.getElementById("shadow-hour").value;
+  if (!state.treeShadowLayers.has(hour)) {
+    const data = await fetchGeoJSON(DATA.treeShadow(hour), `${hour.slice(0, 2)}:00 tree shadows`);
+    const layer = L.geoJSON(data, {
+      pane: "treeShadows",
+      style: {
+        color: "#116149",
+        weight: 0.35,
+        opacity: 0.65,
+        fillColor: "#2f8f68",
+        fillOpacity: 0.46,
+        smoothFactor: 1.2,
+      },
+      onEachFeature(feature, item) {
+        const p = feature.properties;
+        item.bindPopup(`
+          <div class="popup-title">Projected tree shadow ${hour.slice(0, 2)}:00</div>
+          <div class="popup-grid">
+            <span>Solar elevation</span><strong>${number(p.solar_alt)}°</strong>
+            <span>Solar azimuth</span><strong>${number(p.solar_az)}°</strong>
+            <span>Canopy threshold</span><strong>≥${number(p.canopy_min, 0)} m</strong>
+          </div>`);
+      },
+    });
+    state.treeShadowLayers.set(hour, layer);
+  }
+  state.currentTreeShadowLayer = state.treeShadowLayers.get(hour);
+  state.currentTreeShadowLayer.addTo(map);
+}
+
 function togglePanel(open) {
   const sidebar = document.getElementById("sidebar");
   const button = document.getElementById("panel-toggle");
@@ -378,11 +419,15 @@ document.getElementById("show-trees").addEventListener("change", (event) => {
 document.getElementById("show-buildings").addEventListener("change", (event) => {
   toggleBuildings(event.target.checked).catch(handleError);
 });
+document.getElementById("show-tree-shadows").addEventListener("change", () => {
+  updateTreeShadowLayer().catch(handleError);
+});
 document.getElementById("show-shadows").addEventListener("change", () => {
   updateShadowLayer().catch(handleError);
 });
 document.getElementById("shadow-hour").addEventListener("change", () => {
   updateShadowLayer().catch(handleError);
+  updateTreeShadowLayer().catch(handleError);
 });
 document.getElementById("panel-toggle").addEventListener("click", () => {
   const sidebar = document.getElementById("sidebar");
