@@ -1,9 +1,9 @@
 const DATA = {
-  parks: "data/parks.geojson?v=20261006-2",
-  villages: "data/villages.geojson?v=20261006-2",
-  trees: "data/trees_ge2m.geojson?v=20261006-2",
-  buildings: "data/buildings.geojson?v=20261006-2",
-  shadow: (hour) => `data/shadows_${hour}.geojson?v=20261006-2`,
+  parks: "data/parks.geojson?v=20261006-3",
+  villages: "data/villages.geojson?v=20261006-3",
+  trees: "data/trees_ge2m.geojson?v=20261006-3",
+  buildings: "data/buildings.geojson?v=20261006-3",
+  shadow: (hour) => `data/shadows_${hour}.geojson?v=20261006-3`,
 };
 
 const palettes = {
@@ -135,7 +135,9 @@ function parkPopup(properties) {
       <span>Afternoon heat risk</span><strong>${number(properties.aft_risk)}%</strong>
       <span>Afternoon combined shade</span><strong>${number(properties.aft_shade)}%</strong>
       <span>Afternoon rank</span><strong>${number(properties.aft_rank, 0)}</strong>
-      <span>Tree coverage</span><strong>${number(properties.tree_pct)}%</strong>
+      <span>Canopy footprint</span><strong>${number(properties.tree_pct)}%</strong>
+      <span>Morning projected tree shadow</span><strong>${number(properties.morn_tree_shadow)}%</strong>
+      <span>Afternoon projected tree shadow</span><strong>${number(properties.aft_tree_shadow)}%</strong>
       <span>Morning building shadow</span><strong>${number(properties.morn_bldg)}%</strong>
       <span>Afternoon building shadow</span><strong>${number(properties.aft_bldg)}%</strong>
       <span>Village</span><strong>${escapeHtml(properties.district)} ${escapeHtml(properties.village)}</strong>
