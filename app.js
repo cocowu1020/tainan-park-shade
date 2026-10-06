@@ -1,10 +1,10 @@
 const DATA = {
-  parks: "data/parks.geojson?v=20261006-5",
-  villages: "data/villages.geojson?v=20261006-5",
-  trees: "data/trees_ge2m.geojson?v=20261006-5",
-  buildings: "data/buildings.geojson?v=20261006-5",
-  shadow: (hour) => `data/shadows_${hour}.geojson?v=20261006-5`,
-  treeShadow: (hour) => `data/tree_shadows_${hour}.geojson?v=20261006-5`,
+  parks: "data/parks.geojson?v=20261006-6",
+  villages: "data/villages.geojson?v=20261006-6",
+  trees: "data/trees_ge2m.geojson?v=20261006-6",
+  buildings: "data/buildings.geojson?v=20261006-6",
+  shadow: (hour) => `data/shadows_${hour}.geojson?v=20261006-6`,
+  treeShadow: (hour) => `data/tree_shadows_${hour}.geojson?v=20261006-6`,
 };
 
 const palettes = {
@@ -134,11 +134,13 @@ function parkPopup(properties) {
   return `
     <div class="popup-title">${escapeHtml(properties.park_name)}</div>
     <div class="popup-grid">
-      <span>Morning heat risk</span><strong>${number(properties.morn_risk)}%</strong>
+      <span>Morning heat risk</span><strong>${number(properties.morn_risk)} / 100</strong>
       <span>Morning combined shade</span><strong>${number(properties.morn_shade)}%</strong>
+      <span>Morning unshaded area</span><strong>${number(properties.morn_unshade)}%</strong>
       <span>Morning rank</span><strong>${number(properties.morn_rank, 0)}</strong>
-      <span>Afternoon heat risk</span><strong>${number(properties.aft_risk)}%</strong>
+      <span>Afternoon heat risk</span><strong>${number(properties.aft_risk)} / 100</strong>
       <span>Afternoon combined shade</span><strong>${number(properties.aft_shade)}%</strong>
+      <span>Afternoon unshaded area</span><strong>${number(properties.aft_unshade)}%</strong>
       <span>Afternoon rank</span><strong>${number(properties.aft_rank, 0)}</strong>
       <span>Canopy footprint</span><strong>${number(properties.tree_pct)}%</strong>
       <span>Morning projected tree shadow</span><strong>${number(properties.morn_tree_shadow)}%</strong>
@@ -148,6 +150,7 @@ function parkPopup(properties) {
       <span>Village</span><strong>${escapeHtml(properties.district)} ${escapeHtml(properties.village)}</strong>
       <span>Median income</span><strong>${number(properties.med_inc_k, 0)} thousand NTD</strong>
       <span>Population age 0–12</span><strong>${number(properties.pop_0_12, 0)}</strong>
+      <span>Child population percentile</span><strong>${number(properties.child_pop_pctile)} / 100</strong>
     </div>`;
 }
 
@@ -159,8 +162,8 @@ function updateParkStyle() {
 
 function renderLegend() {
   const title = state.metric === "morning"
-    ? "Morning heat risk (%)"
-    : "Afternoon heat risk (%)";
+    ? "Morning heat risk (0–100)"
+    : "Afternoon heat risk (0–100)";
   const labels = ["Lowest", "Low", "Middle", "High", "Highest"];
   const palette = palettes[state.metric];
   legendElement.innerHTML = `
