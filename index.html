@@ -11,7 +11,7 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   >
-  <link rel="stylesheet" href="styles.css?v=20261006-7">
+  <link rel="stylesheet" href="styles.css?v=20261012-1">
 </head>
 <body>
   <header class="app-header">
@@ -50,6 +50,27 @@
         <label class="toggle-row">
           <input id="show-population" type="checkbox">
           <span>Population age 0–12</span>
+        </label>
+      </section>
+
+      <section class="control-section layer-options">
+        <label for="gap-layer">Cooling gaps by district</label>
+        <select id="gap-layer">
+          <option value="none">None</option>
+          <option value="indoor_gap_pct">Indoor cooling access gap</option>
+          <option value="outdoor_gap_pct">Outdoor cooling access gap</option>
+          <option value="combined_gap_pct">Combined cooling access gap</option>
+          <option value="indoor_quality_gap_pct">Indoor quality gap</option>
+          <option value="outdoor_quality_gap_pct">Outdoor shade-quality gap</option>
+        </select>
+        <p class="control-note">Initial 800 m straight-line proxy for a 15-minute walk.</p>
+        <label class="toggle-row">
+          <input id="show-indoor-places" type="checkbox">
+          <span>Indoor cooling places</span>
+        </label>
+        <label class="toggle-row">
+          <input id="show-outdoor-places" type="checkbox">
+          <span>Outdoor cooling places</span>
         </label>
       </section>
 
@@ -108,6 +129,7 @@
       <div id="map"></div>
       <div id="loading-status" class="loading-status" role="status" aria-live="polite">Loading map data…</div>
       <div id="legend" class="map-legend"></div>
+      <div id="gap-legend" class="map-legend gap-legend hidden"></div>
     </section>
   </main>
 
@@ -116,6 +138,6 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
-  <script src="app.js?v=20261006-7"></script>
+  <script src="app.js?v=20261012-1"></script>
 </body>
 </html>

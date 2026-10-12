@@ -5,6 +5,8 @@ const DATA = {
   buildings: "data/buildings.geojson?v=20261006-7",
   shadow: (hour) => `data/shadows_${hour}.geojson?v=20261006-7`,
   treeShadow: (hour) => `data/tree_shadows_${hour}.geojson?v=20261006-7`,
+  districtGaps: "data/district_cooling_gaps.geojson?v=20261012-1",
+  coolingPlaces: "data/cooling_places.geojson?v=20261012-1",
 };
 
 const palettes = {
@@ -12,6 +14,30 @@ const palettes = {
   afternoon: ["#1a9850", "#91cf60", "#fee08b", "#fc8d59", "#d73027"],
   income: ["#f2f0f7", "#cbc9e2", "#9e9ac8", "#756bb1", "#54278f"],
   population: ["#edf8fb", "#b2e2e2", "#66c2a4", "#2ca25f", "#006d2c"],
+  gap: ["#ffffcc", "#fed976", "#fd8d3c", "#e31a1c", "#800026"],
+};
+
+const gapMetrics = {
+  indoor_gap_pct: {
+    label: "Indoor cooling access gap",
+    detail: "Children outside an 800 m indoor cooling-place buffer",
+  },
+  outdoor_gap_pct: {
+    label: "Outdoor cooling access gap",
+    detail: "Children outside an 800 m outdoor cooling-place buffer",
+  },
+  combined_gap_pct: {
+    label: "Combined cooling access gap",
+    detail: "Children outside both indoor and outdoor cooling-place buffers",
+  },
+  indoor_quality_gap_pct: {
+    label: "Indoor quality gap",
+    detail: "Recorded AC, accessibility, drinking water, seating and toilets",
+  },
+  outdoor_quality_gap_pct: {
+    label: "Outdoor shade-quality gap",
+    detail: "Park-area-weighted deficit in combined building and tree shade",
+  },
 };
 
 const state = {
@@ -27,6 +53,11 @@ const state = {
   treeShadowLayers: new Map(),
   currentTreeShadowLayer: null,
   parkLayersById: new Map(),
+  districtGapsData: null,
+  districtGapsLayer: null,
+  coolingPlacesData: null,
+  indoorPlacesLayer: null,
+  outdoorPlacesLayer: null,
 };
 
 const map = L.map("map", {
@@ -61,6 +92,8 @@ L.control.layers(
 
 map.createPane("villages");
 map.getPane("villages").style.zIndex = 360;
+map.createPane("gaps");
+map.getPane("gaps").style.zIndex = 350;
 map.createPane("shadows");
 map.getPane("shadows").style.zIndex = 430;
 map.createPane("treeShadows");
@@ -71,9 +104,12 @@ map.createPane("buildings");
 map.getPane("buildings").style.zIndex = 450;
 map.createPane("parks");
 map.getPane("parks").style.zIndex = 400;
+map.createPane("coolingPlaces");
+map.getPane("coolingPlaces").style.zIndex = 510;
 
 const statusElement = document.getElementById("loading-status");
 const legendElement = document.getElementById("legend");
+const gapLegendElement = document.getElementById("gap-legend");
 const parkSearch = document.getElementById("park-search");
 
 function setStatus(message) {
@@ -113,6 +149,127 @@ function number(value, digits = 1) {
 function classColor(classValue, palette) {
   const index = Math.max(0, Math.min(4, Number(classValue) - 1));
   return palette[index];
+}
+
+function gapColor(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return "#b8bec2";
+  if (parsed <= 20) return palettes.gap[0];
+  if (parsed <= 40) return palettes.gap[1];
+  if (parsed <= 60) return palettes.gap[2];
+  if (parsed <= 80) return palettes.gap[3];
+  return palettes.gap[4];
+}
+
+function renderGapLegend(mode) {
+  if (!mode || !gapMetrics[mode]) {
+    gapLegendElement.classList.add("hidden");
+    return;
+  }
+  const labels = ["0–20", ">20–40", ">40–60", ">60–80", ">80–100"];
+  gapLegendElement.innerHTML = `
+    <div class="legend-title">${gapMetrics[mode].label} (%)</div>
+    ${labels.map((label, index) => `
+      <div class="legend-row">
+        <span class="legend-swatch" style="background:${palettes.gap[index]}"></span>
+        <span>${label}</span>
+      </div>`).join("")}
+    <div class="legend-note">800 m straight-line proxy; grey = no quality data</div>`;
+  gapLegendElement.classList.remove("hidden");
+}
+
+function gapPopup(properties, mode) {
+  const metric = gapMetrics[mode];
+  return `
+    <div class="popup-title">${escapeHtml(properties.district)}</div>
+    <div class="popup-grid">
+      <span>${escapeHtml(metric.label)}</span><strong>${number(properties[mode])}%</strong>
+      <span>Children age 0–12</span><strong>${number(properties.child_population, 0)}</strong>
+      <span>Indoor access gap</span><strong>${number(properties.indoor_gap_pct)}%</strong>
+      <span>Outdoor access gap</span><strong>${number(properties.outdoor_gap_pct)}%</strong>
+      <span>Combined access gap</span><strong>${number(properties.combined_gap_pct)}%</strong>
+      <span>Indoor quality gap</span><strong>${number(properties.indoor_quality_gap_pct)}%</strong>
+      <span>Outdoor shade-quality gap</span><strong>${number(properties.outdoor_quality_gap_pct)}%</strong>
+      <span>Indoor cooling places</span><strong>${number(properties.indoor_place_count, 0)}</strong>
+      <span>Outdoor cooling places</span><strong>${number(properties.outdoor_place_count, 0)}</strong>
+    </div>
+    <div class="popup-note">${escapeHtml(metric.detail)}. Accessibility is an initial 800 m straight-line estimate, not a walking-network isochrone.</div>`;
+}
+
+async function updateGapLayer(mode) {
+  if (state.districtGapsLayer) {
+    map.removeLayer(state.districtGapsLayer);
+    state.districtGapsLayer = null;
+  }
+  if (mode === "none") {
+    renderGapLegend(null);
+    return;
+  }
+  if (!state.districtGapsData) {
+    state.districtGapsData = await fetchGeoJSON(DATA.districtGaps, "cooling-access gaps");
+  }
+  state.districtGapsLayer = L.geoJSON(state.districtGapsData, {
+    pane: "gaps",
+    style: (feature) => ({
+      color: "#5d6265",
+      weight: 0.8,
+      opacity: 0.9,
+      fillColor: gapColor(feature.properties[mode]),
+      fillOpacity: 0.58,
+    }),
+    onEachFeature(feature, layer) {
+      layer.bindPopup(gapPopup(feature.properties, mode), { maxWidth: 360 });
+      layer.on({
+        mouseover: () => layer.setStyle({ weight: 2, color: "#ffffff" }),
+        mouseout: () => state.districtGapsLayer?.resetStyle(layer),
+      });
+    },
+  }).addTo(map);
+  map.closePopup();
+  map.fitBounds(state.districtGapsLayer.getBounds(), { padding: [20, 20] });
+  renderGapLegend(mode);
+}
+
+function coolingPlacePopup(properties) {
+  return `
+    <div class="popup-title">${escapeHtml(properties.place_name)}</div>
+    <div class="popup-grid">
+      <span>Type</span><strong>${properties.place_type === "indoor" ? "Indoor" : "Outdoor"}</strong>
+      <span>Provider/type</span><strong>${escapeHtml(properties.cooling_type)}</strong>
+      <span>Opening hours</span><strong>${escapeHtml(properties.opening_hours || "Not recorded")}</strong>
+      <span>Recorded quality score</span><strong>${number(properties.quality_score)} / 100</strong>
+      <span>Address</span><strong>${escapeHtml(properties.address)}</strong>
+    </div>`;
+}
+
+async function toggleCoolingPlaces(type, show) {
+  const layerKey = type === "indoor" ? "indoorPlacesLayer" : "outdoorPlacesLayer";
+  if (!show) {
+    if (state[layerKey]) map.removeLayer(state[layerKey]);
+    return;
+  }
+  if (!state.coolingPlacesData) {
+    state.coolingPlacesData = await fetchGeoJSON(DATA.coolingPlaces, "cooling places");
+  }
+  if (!state[layerKey]) {
+    const color = type === "indoor" ? "#2767a8" : "#16835f";
+    state[layerKey] = L.geoJSON(state.coolingPlacesData, {
+      pane: "coolingPlaces",
+      filter: (feature) => feature.properties.place_type === type,
+      pointToLayer: (feature, latlng) => L.circleMarker(latlng, {
+        pane: "coolingPlaces",
+        radius: 4,
+        color: "#ffffff",
+        weight: 1,
+        fillColor: color,
+        fillOpacity: 0.9,
+      }),
+      onEachFeature(feature, layer) {
+        layer.bindPopup(coolingPlacePopup(feature.properties), { maxWidth: 340 });
+      },
+    });
+  }
+  state[layerKey].addTo(map);
 }
 
 function parkClass(properties) {
@@ -425,6 +582,15 @@ incomeToggle.addEventListener("change", () => {
 populationToggle.addEventListener("change", () => {
   if (populationToggle.checked) incomeToggle.checked = false;
   updateVillageLayer(populationToggle.checked ? "population" : "none").catch(handleError);
+});
+document.getElementById("gap-layer").addEventListener("change", (event) => {
+  updateGapLayer(event.target.value).catch(handleError);
+});
+document.getElementById("show-indoor-places").addEventListener("change", (event) => {
+  toggleCoolingPlaces("indoor", event.target.checked).catch(handleError);
+});
+document.getElementById("show-outdoor-places").addEventListener("change", (event) => {
+  toggleCoolingPlaces("outdoor", event.target.checked).catch(handleError);
 });
 document.getElementById("show-trees").addEventListener("change", (event) => {
   toggleTrees(event.target.checked).catch(handleError);

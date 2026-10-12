@@ -136,6 +136,13 @@ input:focus-visible {
 
 .layer-options { padding-bottom: 8px; }
 
+.control-note {
+  margin: 6px 0 8px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
 .toggle-row {
   display: flex !important;
   align-items: center;
@@ -256,6 +263,11 @@ input:focus-visible {
 
 .map-legend.hidden { display: none; }
 
+.gap-legend {
+  bottom: 170px;
+  width: 210px;
+}
+
 .legend-title {
   margin-bottom: 7px;
   font-size: 12px;
@@ -274,6 +286,14 @@ input:focus-visible {
   width: 18px;
   height: 12px;
   border: 1px solid rgba(25, 35, 40, 0.3);
+}
+
+.legend-note,
+.popup-note {
+  margin-top: 7px;
+  color: var(--muted);
+  font-size: 10px;
+  line-height: 1.35;
 }
 
 .leaflet-popup-content { margin: 12px 14px; line-height: 1.45; }
@@ -302,4 +322,5 @@ input:focus-visible {
   .sidebar.open { transform: translateX(0); }
   .map-region { height: 100%; }
   .map-legend { right: 8px; bottom: 18px; }
+  .gap-legend { bottom: 166px; }
 }
